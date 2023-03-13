@@ -1,0 +1,22 @@
+name: Build images
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            git clone git@github.com:ResamVi/tagebuch repo
+            docker-compose -p tagebuch -f repo/docker-compose.yml down
+            docker-compose -p tagebuch -f repo/docker-compose.yml up --detach --build --force-recreate
+            rm -rf repo
