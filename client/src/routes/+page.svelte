@@ -1,12 +1,24 @@
 <script lang="ts">
+import { onMount } from 'svelte';
+
 let text: string = '';
 let lines: string[] = ["", "", ""];
+let connected = false;
 
 const opacity: number[] = [
     .05,
     .5,
     .98,
 ];
+
+let socket: WebSocket;
+
+onMount(() => {
+    socket = new WebSocket("ws://localhost:4123"); // TODO: Environment Variables
+    socket.addEventListener("open", () => {
+        connected = true;
+    });
+})
 
 $: {
     // Move line up after certain length.
@@ -23,6 +35,11 @@ $: {
 
     // Trigger a redraw so that lines that were shift'd actually leave the screen.
     lines = lines;
+
+    console.log(lines.join(" "));
+
+    if (connected)
+        socket.send(lines.join(" "));
 }
 
 // When a user presses backspace until no text exists return to the previous line.
