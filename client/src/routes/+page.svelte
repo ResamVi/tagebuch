@@ -1,9 +1,12 @@
 <script lang="ts">
 import { onMount } from 'svelte';
+import Diary from './diary';
 
 let text: string = '';
 let lines: string[] = ["", "", ""];
 let connected = false;
+
+let diary = new Diary();
 
 const opacity: number[] = [
     .05,
@@ -21,8 +24,10 @@ onMount(() => {
 })
 
 $: {
+    diary.text = text;
+
     // Move line up after certain length.
-    if (text.length > 39) {
+    if (text.length > Diary.TEXT_LIMIT) {
         // The last word should be not be split up.
         let remainder = text.split(" ");
         let lastWord = remainder.pop() as string;
@@ -35,8 +40,6 @@ $: {
 
     // Trigger a redraw so that lines that were shift'd actually leave the screen.
     lines = lines;
-
-    console.log(lines.join(" "));
 
     if (connected)
         socket.send(lines.join(" "));
