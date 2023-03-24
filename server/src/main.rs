@@ -1,15 +1,22 @@
+use log::info;
 use postgres::{Client, NoTls, error::DbError};
 use std::{thread, time};
 use std::net::{TcpListener, TcpStream};
 use tungstenite::{accept, WebSocket};
+use simple_logger;
+
+#[macro_use] 
+use log;
 
 fn main() {
+    simple_logger::SimpleLogger::new().env().init().unwrap();
+
     // Endlessly try to connect.
     let mut client = loop {
         let mut connect_attempt = Client::connect("host=localhost user=postgres password=example", NoTls);
         match connect_attempt {
             Ok(client) => break client,
-            Err(e) => println!("{:?}", e),
+            Err(e) => info!("{}", e),
         }
 
         thread::sleep(time::Duration::from_secs(3));
@@ -31,6 +38,10 @@ fn main() {
     let server = TcpListener::bind("127.0.0.1:4123").unwrap();
     for stream in server.incoming() {
         let mut websocket_conn = accept(stream.unwrap()).unwrap();
+
+        // 
+        // websocket_conn.write_message()
+
         loop {
             if store(&mut client, &mut websocket_conn) {
                 break

@@ -3,8 +3,8 @@ name = "tagebuch"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+log = "0.4.17"
 postgres = "0.19.4"
+simple_logger = "4.1.0"
 tungstenite = "0.18.0"
