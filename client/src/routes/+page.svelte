@@ -2,8 +2,6 @@
 import { onMount } from 'svelte';
 import Diary from './diary';
 
-let text: string = '';
-let lines: string[] = ["", "", ""];
 let connected = false;
 
 let diary = new Diary();
@@ -24,48 +22,23 @@ onMount(() => {
 })
 
 $: {
-    diary.text = text;
-
-    // Move line up after certain length.
-    if (text.length > Diary.TEXT_LIMIT) {
-        // The last word should be not be split up.
-        let remainder = text.split(" ");
-        let lastWord = remainder.pop() as string;
-
-        lines.push(remainder.join(" "));
-        lines.shift();
-
-        text = lastWord;
-    }
-
-    // Trigger a redraw so that lines that were shift'd actually leave the screen.
-    lines = lines;
-
     if (connected)
-        socket.send(lines.join(" "));
+        socket.send(diary.fullText);
 }
 
 // When a user presses backspace until no text exists return to the previous line.
-function jumpBackLine(e: KeyboardEvent) {
-    if (e.key == 'Backspace' && text == "") {
-        let lastLine = lines.pop() as string;
-        text = lastLine;
-    }
-    if (lines.length < 3) {
-        lines.unshift("")
-    }
-
-    // Trigger a redraw so that lines that were shift'd actually leave the screen.
-    lines = lines
+function keydown(e: KeyboardEvent) {
+    if (e.key == 'Backspace')
+        diary.removeLine()
 }
 </script>
 
 <div>
-    {#each lines as line, i}
+    {#each diary.lines as line, i}
         <p class="text" style="opacity:{opacity[i]}">{line}</p>
     {/each}
 
-    <textarea class="text" bind:value={text} on:keydown={jumpBackLine} autofocus />
+    <textarea class="text" bind:value={diary.text} on:keydown={keydown} autofocus />
 </div>
 
 <style>

@@ -19,13 +19,12 @@ fn main() {
     // Init database if first time.
     let schema_defined = client.batch_execute("
         CREATE TABLE IF NOT EXISTS entries (
-            id      SERIAL PRIMARY KEY,
-            name    TEXT NOT NULL,
-            date    TIMESTAMP
+            date        TIMESTAMP PRIMARY KEY DEFAULT CURRENT_TIMESTAMP,
+            content     TEXT NOT NULL
         )
     ");
     if schema_defined.is_err() {
-        panic!("the query was written in a way that's not idempotent")
+        panic!("the query was written with an error")
     }
 
     // Listen for websocket connections.
@@ -33,20 +32,26 @@ fn main() {
     for stream in server.incoming() {
         let mut websocket_conn = accept(stream.unwrap()).unwrap();
         loop {
-            if store(&mut websocket_conn) {
+            if store(&mut client, &mut websocket_conn) {
                 break
             }
         }
     }
 }
 
-fn store(connection: &mut WebSocket<TcpStream>) -> bool {
+fn store(client: &mut Client, connection: &mut WebSocket<TcpStream>) -> bool {
     // Check if connection closed.
-    let msg = connection.read_message();
-    match msg {
-        Ok(content) => println!("{:?}", content),
-        Err(e) => return true,
-    }
+    let content = match connection.read_message() {
+        Ok(content) => content,
+        Err(_) => panic!("idk man how to do rust errors"),
+    };
+
+    client.execute("
+       INSERT INTO entries (content, date) 
+       VALUES ($1, date_trunc('day', CURRENT_TIMESTAMP))
+       ON CONFLICT (date) 
+       DO UPDATE SET content = $1
+    ", &[&content.to_string()]);
 
     return false;
 }
