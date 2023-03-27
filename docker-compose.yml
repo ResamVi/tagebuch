@@ -5,6 +5,11 @@ services:
     restart: always
     ports:
       - "127.0.0.1:4340:3000"
+  tagebuch_server:
+    build: server/.
+    restart: always
+    ports:
+      - "127.0.0.1:4123:4123"
   database:
     image: postgres
     restart: always
@@ -12,4 +17,8 @@ services:
       - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_PASSWORD: example
+    volumes:
+      - tagebuch_data:/var/lib/postgresql/data
 
+volumes:
+  tagebuch_data:
