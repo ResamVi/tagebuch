@@ -1,11 +1,11 @@
 version: '3'
 services:
-  tagebuch_client:
+  client:
     build: client/.
     restart: always
     ports:
       - "127.0.0.1:4340:3000"
-  tagebuch_server:
+  server:
     build: server/.
     restart: always
     ports:
