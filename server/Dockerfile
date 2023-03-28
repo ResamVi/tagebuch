@@ -6,5 +6,5 @@ RUN cargo build --release --target x86_64-unknown-linux-musl
 
 FROM alpine:3.17
 WORKDIR /app
-COPY --from=build /app/target/release/tagebuch .
-CMD ["./tagebuch"]
+COPY --from=build /app/target/x86_64-unknown-linux-musl/release/tagebuch .
+CMD ["/app/tagebuch"]
