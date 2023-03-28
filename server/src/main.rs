@@ -8,9 +8,6 @@ use log::{info, warn, error, SetLoggerError};
 use postgres::{Client, NoTls, error::DbError};
 use tungstenite::{accept, WebSocket, Message};
 
-#[macro_use] 
-use log;
-
 const QUERY_SCHEMA: &str = "
     CREATE TABLE IF NOT EXISTS entries (
         date        TIMESTAMP PRIMARY KEY DEFAULT CURRENT_TIMESTAMP,
@@ -43,16 +40,16 @@ impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::LoggerInit(err) => {
-                write!(f, "could not initialize logger: {}", err)
+                write!(f, "could not initialize logger: {err}")
             },
             Error::SqlSyntax(err) => {
-                write!(f, "could not define schema: {}", err)
+                write!(f, "could not define schema: {err}")
             },
             Error::TcpConnection(err) => {
-                write!(f, "could not accept TCP connection: {}", err)
+                write!(f, "could not accept TCP connection: {err}")
             },
             Error::ReadMessage(err) => {
-                write!(f, "could not accept TCP connection: {}", err)
+                write!(f, "could not accept TCP connection: {err}")
             },
         }
     }
@@ -126,7 +123,7 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    return Ok(())
+    Ok(())
 }
 
 fn store(client: &mut Client, connection: &mut WebSocket<TcpStream>) -> Result<(), Error> {
