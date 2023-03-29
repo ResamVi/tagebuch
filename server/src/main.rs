@@ -65,7 +65,8 @@ fn main() -> Result<(), Error> {
 
     // Endlessly try to connect.
     let mut client = loop {
-        let mut connect_attempt = Client::connect("host=localhost user=postgres password=example", NoTls);
+        // TODO: Use environment variables
+        let mut connect_attempt = Client::connect("host=server user=postgres password=example port=5433", NoTls);
         match connect_attempt {
             Ok(client) => break client,
             Err(e) => warn!("{}", e),
