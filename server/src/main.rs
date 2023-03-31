@@ -1,5 +1,6 @@
+use std::env::VarsOs;
 use std::fmt::{Debug, Formatter, Display};
-use std::{thread, time};
+use std::{thread, time, env};
 use std::net::{TcpListener, TcpStream};
 
 use simple_logger::SimpleLogger;
@@ -55,6 +56,53 @@ impl Display for Error {
     }
 }
 
+struct Config {
+    database_host: String,
+    database_user: String,
+    database_password: String,
+    database_port: String,
+}
+
+impl Config {
+    fn from_env() -> Self {
+        let database_host = match env::var_os("DB_HOST") {
+            Some(val) => val.into_string().unwrap_or("".to_string()),
+            None => "localhost".to_string(),
+        };
+
+        let database_user = match env::var_os("DB_USER") {
+            Some(val) => val.into_string().unwrap_or("".to_string()),
+            None => "postgres".to_string(),
+        };
+
+        let database_password = match env::var_os("DB_PASS") {
+            Some(val) => val.into_string().unwrap_or("".to_string()),
+            None => "example".to_string(),
+        };
+
+        let database_port = match env::var_os("DB_PORT") {
+            Some(val) => val.into_string().unwrap_or("".to_string()),
+            None => "5433".to_string(),
+        };
+
+        Config {
+            database_host,
+            database_user,
+            database_password,
+            database_port,
+        }
+    }
+
+    fn connection_string(&self) -> String {
+        format!("host={0} user={1} password={2} port={3}", 
+                self.database_host, 
+                self.database_user, 
+                self.database_password, 
+                self.database_port
+        )
+    }
+}
+
 fn main() -> Result<(), Error> {
     // Initialize logger.
     match SimpleLogger::new().env().init() {
@@ -63,10 +111,14 @@ fn main() -> Result<(), Error> {
     }
     info!("logger initalized");
 
+    // Load configurations from environment variables.
+    let config = Config::from_env();
+    info!("configs loaded: {}", config.connection_string());
+
     // Endlessly try to connect.
     let mut client = loop {
         // TODO: Use environment variables
-        let mut connect_attempt = Client::connect("host=server user=postgres password=example port=5433", NoTls);
+        let mut connect_attempt = Client::connect(&config.connection_string(), NoTls);
         match connect_attempt {
             Ok(client) => break client,
             Err(e) => warn!("{}", e),
@@ -74,19 +126,21 @@ fn main() -> Result<(), Error> {
 
         thread::sleep(time::Duration::from_secs(3));
     };
-    info!("connected to database");
+    info!("database connection established");
 
     // Init database if it's the first time.
     match client.batch_execute(QUERY_SCHEMA) {
         Ok(_) => (),
         Err(err) => return Err(Error::SqlSyntax(err)),
     };
+    info!("schema initialized");
 
     // Listen for websocket connections.
     let server = match TcpListener::bind("127.0.0.1:4123") {
         Ok(server) => server,
-        Err(err) => todo!(),
+        Err(err) => return Err(Error::TcpConnection(err)),
     };
+    info!("listening to connections");
 
     for incoming in server.incoming() {
         // Accept TCP connection.
@@ -94,6 +148,7 @@ fn main() -> Result<(), Error> {
             Ok(stream) => stream,
             Err(err) => return Err(Error::TcpConnection(err)),
         };
+        info!("accepted TCP connection");
 
         // Upgrade to Websocket connection.
         let mut websocket_conn = match accept(stream) {
@@ -103,6 +158,7 @@ fn main() -> Result<(), Error> {
                 break;
             }
         };
+        info!("upgraded to websocket protocol");
 
         // Send client what has been written for this day.
         let row = match client.query_one(QUERY_SELECT, &[]) {
