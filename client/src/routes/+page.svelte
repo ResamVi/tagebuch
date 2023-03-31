@@ -23,9 +23,10 @@ onMount(() => {
 
     // Set the text when we have written something already.
     socket.addEventListener("message", (event) => {
-        console.log(event.data);
-        diary.text = event.data;
-        loaded = true;
+        diary.init(event.data);
+        loaded = true
+
+        diary.text = diary.text; // Trigger redraw
     });
     socket.addEventListener("closed", () => {
         console.log("Closed");
@@ -34,12 +35,18 @@ onMount(() => {
 
 // When a user presses backspace until no text exists return to the previous line.
 function keydown(e: KeyboardEvent) {
+    // Surpress Enter (TODO: Should create a new line)
+    if (e.key == 'Enter')
+        e.preventDefault()
+
+    if (e.key == 'Backspace') {
+        diary.removeLine()
+        diary.text = diary.text; // Trigger redraw
+    }
+
     // Send each change to the server.
     if (connected && loaded)
         socket.send(diary.fullText);
-
-    if (e.key == 'Backspace')
-        diary.removeLine()
 }
 </script>
 

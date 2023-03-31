@@ -28,7 +28,6 @@ class Diary {
     // To be sent to the server.
     get fullText(): string {
         let allLines = [...this.stack, this.currentLine];
-        console.log(allLines);
         return allLines.join("\n");
     }
 
@@ -45,8 +44,22 @@ class Diary {
     // When the user presses backspace until the
     // whole line is cleared it should go back to the previous line.
     public removeLine() {
-        if (this.currentLine === "")
+        console.log("remove");
+
+        if (this.currentLine === "") {
             this.currentLine = this.stack.pop() as string;
+            console.log("new line");
+        }
+    }
+
+    public init(fullText: string) {
+        let split = fullText.split("\n");
+
+        if (split.length == 0)
+            return
+
+        this.currentLine = split.pop() as string;
+        this.stack = split;
     }
 }
 
