@@ -3,6 +3,7 @@ import { onMount } from 'svelte';
 import Diary from './diary';
 
 let connected = false;
+let loaded = false;
 
 let diary = new Diary();
 
@@ -19,15 +20,24 @@ onMount(() => {
     socket.addEventListener("open", () => {
         connected = true;
     });
-})
 
-$: {
-    if (connected)
-        socket.send(diary.fullText);
-}
+    // Set the text when we have written something already.
+    socket.addEventListener("message", (event) => {
+        console.log(event.data);
+        diary.text = event.data;
+        loaded = true;
+    });
+    socket.addEventListener("closed", () => {
+        console.log("Closed");
+    });
+})
 
 // When a user presses backspace until no text exists return to the previous line.
 function keydown(e: KeyboardEvent) {
+    // Send each change to the server.
+    if (connected && loaded)
+        socket.send(diary.fullText);
+
     if (e.key == 'Backspace')
         diary.removeLine()
 }

@@ -27,7 +27,9 @@ class Diary {
 
     // To be sent to the server.
     get fullText(): string {
-        return this.stack.join(" ") + "\n" + this.currentLine;
+        let allLines = [...this.stack, this.currentLine];
+        console.log(allLines);
+        return allLines.join("\n");
     }
 
     private addLine(text: string) {

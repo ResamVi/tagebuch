@@ -4,8 +4,7 @@ use std::{thread, time, env};
 use std::net::{TcpListener, TcpStream};
 
 use simple_logger::SimpleLogger;
-use log::{info, warn, error, SetLoggerError};
-
+use log::{info, warn, error, SetLoggerError, debug};
 use postgres::{Client, NoTls, error::DbError};
 use tungstenite::{accept, WebSocket, Message};
 
@@ -26,8 +25,8 @@ enum Error {
     /// An error initializing the logger. From reading the lib code this should not occur.
     LoggerInit(SetLoggerError),
 
-    /// An error in the SQL statement that can't be fixed during runtime.
-    SqlSyntax(postgres::Error),
+    /// An error in the SQL statement that sets up the schema that can't be fixed during runtime.
+    SchemaInit(postgres::Error),
 
     /// An error while accepting the TCP connection.
     TcpConnection(std::io::Error),
@@ -43,7 +42,7 @@ impl Display for Error {
             Error::LoggerInit(err) => {
                 write!(f, "could not initialize logger: {err}")
             },
-            Error::SqlSyntax(err) => {
+            Error::SchemaInit(err) => {
                 write!(f, "could not define schema: {err}")
             },
             Error::TcpConnection(err) => {
@@ -131,7 +130,7 @@ fn main() -> Result<(), Error> {
     // Init database if it's the first time.
     match client.batch_execute(QUERY_SCHEMA) {
         Ok(_) => (),
-        Err(err) => return Err(Error::SqlSyntax(err)),
+        Err(err) => return Err(Error::SchemaInit(err)),
     };
     info!("schema initialized");
 
@@ -161,11 +160,12 @@ fn main() -> Result<(), Error> {
         info!("upgraded to websocket protocol");
 
         // Send client what has been written for this day.
-        let row = match client.query_one(QUERY_SELECT, &[]) {
-            Ok(row) => row,
-            Err(err) => panic!("{}", err),
+        let content = match client.query_one(QUERY_SELECT, &[]) {
+            Ok(row) => row.get("content"),
+            Err(err) => "".to_string(), 
         };
-        let content: String = row.get("content");
+        info!("sent current text {}", content);
+
         websocket_conn.write_message(Message::Text(content));
 
         // Listen to what client has to write and store it.
@@ -179,6 +179,7 @@ fn main() -> Result<(), Error> {
             }
         }
     }
+    info!("stopped listening to TCP connections. bye");
 
     Ok(())
 }
@@ -190,6 +191,13 @@ fn store(client: &mut Client, connection: &mut WebSocket<TcpStream>) -> Result<(
         Err(err) => return Err(Error::ReadMessage(err))
     };
 
+    // BUG: Avoid deleting everything that was written when 
+    // CTRL+<key> was pressed in the client. IDK
+    if content.is_empty() {
+        return Ok(())
+    }
+
+    // TODO: Check for error
     client.execute("
        INSERT INTO entries (content, date) 
        VALUES ($1, date_trunc('day', CURRENT_TIMESTAMP))
@@ -197,5 +205,6 @@ fn store(client: &mut Client, connection: &mut WebSocket<TcpStream>) -> Result<(
        DO UPDATE SET content = $1
     ", &[&content.to_string()]);
 
+    info!("stored user input");
     Ok(())
 }
