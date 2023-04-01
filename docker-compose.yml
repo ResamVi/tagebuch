@@ -1,7 +1,10 @@
 version: '3'
 services:
   client:
-    build: client/.
+    build: 
+      context: client/.
+      args:
+        PUBLIC_BASE_URL: ws://localhost:4123
     restart: always
     ports:
       - "127.0.0.1:4340:3000"
@@ -10,6 +13,13 @@ services:
     restart: always
     ports:
       - "127.0.0.1:4123:4123"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 4123
+      DB_HOST: database
+      DB_USER: postgres
+      DB_PASS: example
+      DB_PORT: 5432
   database:
     image: postgres
     restart: always

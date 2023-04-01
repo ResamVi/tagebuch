@@ -56,6 +56,8 @@ impl Display for Error {
 }
 
 struct Config {
+    host: String,
+    port: String,
     database_host: String,
     database_user: String,
     database_password: String,
@@ -64,6 +66,15 @@ struct Config {
 
 impl Config {
     fn from_env() -> Self {
+        let host = match env::var_os("HOST") {
+            Some(val) => val.into_string().unwrap_or("".to_string()),
+            None => "0.0.0.0".to_string(),
+        };
+        let port = match env::var_os("PORT") {
+            Some(val) => val.into_string().unwrap_or("".to_string()),
+            None => "4123".to_string(),
+        };
+
         let database_host = match env::var_os("DB_HOST") {
             Some(val) => val.into_string().unwrap_or("".to_string()),
             None => "localhost".to_string(),
@@ -85,6 +96,8 @@ impl Config {
         };
 
         Config {
+            host,
+            port,
             database_host,
             database_user,
             database_password,
@@ -93,12 +106,16 @@ impl Config {
     }
 
     fn connection_string(&self) -> String {
-        format!("host={0} user={1} password={2} port={3}", 
+        format!("host={} user={} password={} port={}", 
                 self.database_host, 
                 self.database_user, 
                 self.database_password, 
                 self.database_port
         )
+    }
+
+    fn bind_address(&self) -> String {
+        format!("{0}:{1}", self.host, self.port)
     }
 }
 
@@ -135,11 +152,11 @@ fn main() -> Result<(), Error> {
     info!("schema initialized");
 
     // Listen for websocket connections.
-    let server = match TcpListener::bind("127.0.0.1:4123") {
+    let server = match TcpListener::bind(config.bind_address()) {
         Ok(server) => server,
         Err(err) => return Err(Error::TcpConnection(err)),
     };
-    info!("listening to connections");
+    info!("listening to connections on port {}", config.port);
 
     for incoming in server.incoming() {
         // Accept TCP connection.

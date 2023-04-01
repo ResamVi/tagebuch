@@ -44,11 +44,8 @@ class Diary {
     // When the user presses backspace until the
     // whole line is cleared it should go back to the previous line.
     public removeLine() {
-        console.log("remove");
-
         if (this.currentLine === "") {
             this.currentLine = this.stack.pop() as string;
-            console.log("new line");
         }
     }
 

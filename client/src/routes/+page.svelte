@@ -1,6 +1,7 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 import Diary from './diary';
+import { PUBLIC_BASE_URL } from '$env/static/public';
 
 let connected = false;
 let loaded = false;
@@ -16,7 +17,9 @@ const opacity: number[] = [
 let socket: WebSocket;
 
 onMount(() => {
-    socket = new WebSocket("ws://localhost:4123"); // TODO: Environment Variables
+    let url = PUBLIC_BASE_URL === undefined ?  "ws://localhost:4123" : PUBLIC_BASE_URL;
+
+    socket = new WebSocket(url);
     socket.addEventListener("open", () => {
         connected = true;
     });
