@@ -1,7 +1,7 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 import Diary from './diary';
-import { PUBLIC_BASE_URL } from '$env/static/public';
+import { PUBLIC_BASE_URL, PUBLIC_SECRET } from '$env/static/public';
 
 let connected = false;
 let loaded = false;
@@ -18,9 +18,11 @@ let socket: WebSocket;
 
 onMount(() => {
     let url = PUBLIC_BASE_URL === undefined ?  "ws://localhost:4123" : PUBLIC_BASE_URL;
+    let secret = PUBLIC_SECRET === undefined ?  "sesam öffne dich" : PUBLIC_SECRET;
 
     socket = new WebSocket(url);
     socket.addEventListener("open", () => {
+        socket.send(secret);
         connected = true;
     });
 

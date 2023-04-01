@@ -10,6 +10,16 @@ jobs:
     steps:
       - name: executing remote ssh commands using password
         uses: appleboy/ssh-action@master
+        env:
+          BUCH_PUBLIC_BASE_URL: ${{ secrets.BUCH_PUBLIC_BASE_URL }}
+          BUCH_PUBLIC_SECRET: ${{ secrets.BUCH_SECRET }}
+          BUCH_SECRET: ${{ secrets.BUCH_SECRET }}
+          # BUCH_HOST: ${{ secrets.BUCH_HOST }}
+          # BUCH_PORT: ${{ secrets.BUCH_PORT }}
+          # BUCH_DB_HOST: ${{ secrets.BUCH_DB_HOST }}
+          # BUCH_DB_USER: ${{ secrets.BUCH_DB_USER }}
+          # BUCH_DB_PASS: ${{ secrets.BUCH_DB_PASS }}
+          # BUCH_DB_PORT: ${{ secrets.BUCH_DB_PORT }}
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}

@@ -4,7 +4,8 @@ services:
     build: 
       context: client/.
       args:
-        PUBLIC_BASE_URL: ws://localhost:4123
+        PUBLIC_BASE_URL: ${BUCH_PUBLIC_BASE_URL:-ws://localhost:4123}
+        PUBLIC_SECRET: ${BUCH_PUBLIC_SECRET:-sesam öffne dich}
     restart: always
     ports:
       - "127.0.0.1:4340:3000"
@@ -14,19 +15,20 @@ services:
     ports:
       - "127.0.0.1:4123:4123"
     environment:
-      HOST: 0.0.0.0
-      PORT: 4123
-      DB_HOST: database
-      DB_USER: postgres
-      DB_PASS: example
-      DB_PORT: 5432
+      HOST: ${BUCH_HOST:-0.0.0.0}
+      PORT: ${BUCH_PORT:-4123}
+      SECRET: ${BUCH_SECRET:-sesam öffne dich}
+      DB_HOST: ${BUCH_DB_HOST:-database}
+      DB_USER: ${BUCH_DB_USER:-postgres}
+      DB_PASS: ${BUCH_DB_PASS:-example}
+      DB_PORT: ${BUCH_DB_PORT:-5432}
   database:
     image: postgres
     restart: always
     ports:
       - "127.0.0.1:5433:5432"
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: ${BUCH_DB_PASS:-example}
     volumes:
       - tagebuch_data:/var/lib/postgresql/data
 

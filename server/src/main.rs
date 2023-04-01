@@ -56,6 +56,7 @@ impl Display for Error {
 }
 
 struct Config {
+    secret: String,
     host: String,
     port: String,
     database_host: String,
@@ -66,6 +67,11 @@ struct Config {
 
 impl Config {
     fn from_env() -> Self {
+        let secret = match env::var_os("SECRET") {
+            Some(val) => val.into_string().unwrap_or("".to_string()),
+            None => "sesam öffne dich".to_string(),
+        };
+            
         let host = match env::var_os("HOST") {
             Some(val) => val.into_string().unwrap_or("".to_string()),
             None => "0.0.0.0".to_string(),
@@ -96,6 +102,7 @@ impl Config {
         };
 
         Config {
+            secret,
             host,
             port,
             database_host,
@@ -175,6 +182,21 @@ fn main() -> Result<(), Error> {
             }
         };
         info!("upgraded to websocket protocol");
+
+
+        // Wait until secret phrase is spoken that unlocks diary.
+        loop {
+            let secret = match websocket_conn.read_message() {
+                Ok(content) => content.to_string(),
+                Err(err) => continue,
+            };
+
+            if secret == config.secret {
+                break
+            }
+
+            info!("access denied with secret: '{}' wanted: '{}'", secret, config.secret);
+        }
 
         // Send client what has been written for this day.
         let content = match client.query_one(QUERY_SELECT, &[]) {
