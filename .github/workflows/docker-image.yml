@@ -20,12 +20,17 @@ jobs:
           # BUCH_DB_USER: ${{ secrets.BUCH_DB_USER }}
           # BUCH_DB_PASS: ${{ secrets.BUCH_DB_PASS }}
           # BUCH_DB_PORT: ${{ secrets.BUCH_DB_PORT }}
+          envs: SERVER_IP,ECON_PORT,ECON_PASSWORD,DB_USER,DB_PASS,DB_NAME
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
+          envs: BUCH_PUBLIC_BASE_URL,BUCH_PUBLIC_SECRET,BUCH_SECRET
           script: |
+            export BUCH_PUBLIC_BASE_URL=$BUCH_PUBLIC_BASE_URL
+            export BUCH_PUBLIC_SECRET=$BUCH_PUBLIC_SECRET
+            export BUCH_SECRET=$BUCH_SECRET
             git clone git@github.com:ResamVi/tagebuch repo
             docker-compose -p tagebuch -f repo/docker-compose.yml down
             docker-compose -p tagebuch -f repo/docker-compose.yml up --detach --build --force-recreate
