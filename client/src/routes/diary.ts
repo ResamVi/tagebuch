@@ -31,14 +31,10 @@ class Diary {
         return allLines.join("\n");
     }
 
-    private addLine(text: string) {
-        // Store everything except the last word that is currently being typed.
-        let splittedText = text.split(" ");
-        let lastWord = splittedText.pop() as string;
-        let remainder = splittedText.join(" ");
 
-        this.stack.push(remainder);
-        this.currentLine = lastWord;
+    public newLine() {
+        this.stack.push(this.currentLine);
+        this.currentLine = "";
     }
 
     // When the user presses backspace until the
@@ -57,6 +53,16 @@ class Diary {
 
         this.currentLine = split.pop() as string;
         this.stack = split;
+    }
+
+    private addLine(text: string) {
+        // Store everything except the last word that is currently being typed.
+        let splittedText = text.split(" ");
+        let lastWord = splittedText.pop() as string;
+        let remainder = splittedText.join(" ");
+
+        this.stack.push(remainder);
+        this.currentLine = lastWord;
     }
 }
 

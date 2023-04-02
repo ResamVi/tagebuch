@@ -41,17 +41,20 @@ onMount(() => {
 // When a user presses backspace until no text exists return to the previous line.
 function keydown(e: KeyboardEvent) {
     // Surpress Enter (TODO: Should create a new line)
-    if (e.key == 'Enter')
-        e.preventDefault()
+    if (e.key == 'Enter') {
+        e.preventDefault();
+        diary.newLine()
+    }
 
     if (e.key == 'Backspace') {
         diary.removeLine()
-        diary.text = diary.text; // Trigger redraw
     }
 
     // Send each change to the server.
     if (connected && loaded)
         socket.send(diary.fullText);
+
+    diary.text = diary.text; // Trigger redraw
 }
 </script>
 
