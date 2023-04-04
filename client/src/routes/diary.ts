@@ -1,12 +1,21 @@
 class Diary {
     private static readonly TEXT_LIMIT = 39;
+    private static readonly LINES_SHOWN = 3;
+    private static readonly MIN_OPACITY = 0.05;
 
     private currentLine: string;
     private stack: string[];
 
+    private opacities: number[];
+
     constructor() {
         this.currentLine = "";
         this.stack = [];
+        this.opacities = [];
+
+        let increments = (1 - Diary.MIN_OPACITY) / Diary.LINES_SHOWN;
+        for(let i = Diary.MIN_OPACITY; i < 1; i += increments)
+            this.opacities.push(Math.trunc(i*100)/100);
     }
 
     set text(arg: string) {
@@ -22,7 +31,7 @@ class Diary {
     }
 
     get lines(): string[] {
-        return this.stack;
+        return this.stack.slice(-Diary.LINES_SHOWN);
     }
 
     // To be sent to the server.
@@ -31,6 +40,18 @@ class Diary {
         return allLines.join("\n");
     }
 
+    public opacity(index: number): number {
+        // Handle edge cases when we have not yet all display lines filled with text.
+        // This avoids the bug where the first submitted line would have lowest opacity.
+        if(this.stack.length == 1)
+            index += 2
+
+        if(this.stack.length == 2)
+            index += 1
+
+
+        return this.opacities[index];
+    }
 
     public newLine() {
         this.stack.push(this.currentLine);

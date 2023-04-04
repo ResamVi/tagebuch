@@ -8,11 +8,6 @@ let loaded = false;
 
 let diary = new Diary();
 
-const opacity: number[] = [
-    .05,
-    .5,
-    .98,
-];
 
 let socket: WebSocket;
 
@@ -40,7 +35,7 @@ onMount(() => {
 
 // When a user presses backspace until no text exists return to the previous line.
 function keydown(e: KeyboardEvent) {
-    // Surpress Enter (TODO: Should create a new line)
+    // Surpress Enter.
     if (e.key == 'Enter') {
         e.preventDefault();
         diary.newLine()
@@ -50,9 +45,17 @@ function keydown(e: KeyboardEvent) {
         diary.removeLine()
     }
 
+    // Because the key is pressed down and not released yet
+    // the latest pressed key is not yet appended to 'diary.text'
+    // and doesn't show in 'diary.fullText'.
+    // => Adjust for that via '+ e.key' (but only if its not 'Backspace', 'Enter', etc.)
+    let key = "";
+    if ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(e.key))
+        key = e.key
+
     // Send each change to the server.
     if (connected && loaded)
-        socket.send(diary.fullText);
+        socket.send(diary.fullText + key); 
 
     diary.text = diary.text; // Trigger redraw
 }
@@ -60,7 +63,7 @@ function keydown(e: KeyboardEvent) {
 
 <div>
     {#each diary.lines as line, i}
-        <p class="text" style="opacity:{opacity[i]}">{line}</p>
+        <p class="text" style="opacity:{diary.opacity(i)}">{line}</p>
     {/each}
 
     <textarea class="text" bind:value={diary.text} on:keydown={keydown} autofocus />
