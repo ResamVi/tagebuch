@@ -61,12 +61,16 @@ function keydown(e: KeyboardEvent) {
 }
 </script>
 
-<div>
-    {#each diary.lines as line, i}
-        <p class="text" style="opacity:{diary.opacity(i)}">{line}</p>
-    {/each}
+<div id="container">
+    <div id="half">
+        <div id="bottom">
+            {#each diary.lines as line, i}
+                <p class="text" style="opacity:{diary.opacity(i)}">{line}</p>
+            {/each}
 
-    <textarea class="text" bind:value={diary.text} on:keydown={keydown} autofocus />
+            <textarea class="text" bind:value={diary.text} on:keydown={keydown} autofocus />
+        </div>
+    </div>
 </div>
 
 <style>
@@ -77,33 +81,41 @@ function keydown(e: KeyboardEvent) {
     src: local('Alegreya'), url('/fonts/Alegreya.ttf') format('truetype');
 }
 
+#container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
 
-div {
-    display: flex;
-    flex-flow: column;
-
+#half {
+    position:relative;
+    height:50%;
+    display: flex; 
     justify-content: center;
-    align-items: center;
-    height: 100vh;
+}
+
+#bottom {
+    position: absolute;
+    bottom: 0;
+    width: 40%;
 }
 
 .text {
-    width: 40%;
+    width: 100%;
     height: 59px;
 
     font-size: 32px;
     font-family: 'Alegreya';
-
 }
 
 p {
     margin: 0;
-
 }
 
 textarea {
     border: none;
     outline: none;
     resize: none;
+    width: 100%
 }
 </style>
