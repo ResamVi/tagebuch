@@ -126,6 +126,36 @@ impl Config {
     }
 }
 
+struct Postgres {
+    client: Client
+} 
+
+impl Postgres {
+    fn new(config: &Config) -> Result<Postgres, Error> {
+        // Endlessly try to connect.
+        let mut client = loop {
+            let mut connect_attempt = Client::connect(&config.connection_string(), NoTls);
+            match connect_attempt {
+                Ok(client) => break client,
+                Err(e) => warn!("{}", e),
+            }
+
+            thread::sleep(time::Duration::from_secs(3));
+        };
+
+        // Init database if it's the first time we started up.
+        match client.batch_execute(QUERY_SCHEMA) {
+            Ok(_) => (),
+            Err(err) => return Err(Error::SchemaInit(err)),
+        };
+        info!("schema initialized");
+
+        Ok(Postgres {
+            client
+        })
+    }
+}
+
 fn main() -> Result<(), Error> {
     // Initialize logger.
     match SimpleLogger::new().env().init() {
@@ -138,25 +168,13 @@ fn main() -> Result<(), Error> {
     let config = Config::from_env();
     info!("configs loaded: {}", config.connection_string());
 
-    // Endlessly try to connect.
-    let mut client = loop {
-        // TODO: Use environment variables
-        let mut connect_attempt = Client::connect(&config.connection_string(), NoTls);
-        match connect_attempt {
-            Ok(client) => break client,
-            Err(e) => warn!("{}", e),
-        }
-
-        thread::sleep(time::Duration::from_secs(3));
+    // Initialize sink where diary entries are stored.
+    let store = match Postgres::new(config) {
+        Ok(store) => store,
+        Err(err) => return Err(err),
     };
     info!("database connection established");
 
-    // Init database if it's the first time.
-    match client.batch_execute(QUERY_SCHEMA) {
-        Ok(_) => (),
-        Err(err) => return Err(Error::SchemaInit(err)),
-    };
-    info!("schema initialized");
 
     // Listen for websocket connections.
     let server = match TcpListener::bind(config.bind_address()) {
