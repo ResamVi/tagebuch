@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+chrono = "0.4.24"
 log = "0.4.17"
 postgres = "0.19.4"
 simple_logger = "4.1.0"

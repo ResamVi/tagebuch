@@ -8,6 +8,7 @@ pub struct Config {
     database_user: String,
     database_password: String,
     database_port: String,
+    pub file_path: String,
 }
 
 impl Config {
@@ -25,6 +26,14 @@ impl Config {
             Some(val) => val.into_string().unwrap_or("".to_string()),
             None => "4123".to_string(),
         };
+
+        let diary_path = match env::var_os("DIARY_PATH") {
+            Some(val) => val.into_string().unwrap_or("".to_string()),
+            None => "./diary".to_string(),
+        };
+
+        // We switched from a database to the filesystem.
+        // All these fields are redundant but kept anyways.
 
         let database_host = match env::var_os("DB_HOST") {
             Some(val) => val.into_string().unwrap_or("".to_string()),
@@ -54,9 +63,11 @@ impl Config {
             database_user,
             database_password,
             database_port,
+            file_path: diary_path,
         }
     }
 
+    /// Print metadata for database connections.
     pub fn connection_string(&self) -> String {
         format!("host={} user={} password={} port={}", 
                 self.database_host, 
@@ -66,8 +77,14 @@ impl Config {
         )
     }
 
+    /// URL where a websocket connection can be established to.
     pub fn bind_address(&self) -> String {
         format!("{0}:{1}", self.host, self.port)
+    }
+
+    /// Print metadata for filesystem storage.
+    pub fn file_path(&self) -> String {
+        format!("file_path={}", self.file_path)
     }
 }
 

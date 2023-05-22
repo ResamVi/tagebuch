@@ -40,7 +40,7 @@ impl Database {
         // Init database if it's the first time we started up.
         match client.batch_execute(QUERY_SCHEMA) {
             Ok(_) => (),
-            Err(err) => return Err(Error::Init()),
+            Err(err) => return Err(Error::Init("could not initialize schema")),
         };
         info!("schema initialized");
 
@@ -65,10 +65,9 @@ impl Store for Database {
     fn store(&mut self, content: &str) -> Result<(), Error> {
         const QUERY_INSERT: &str = "INSERT INTO entries (content, date) VALUES ($1, date_trunc('day', CURRENT_TIMESTAMP)) ON CONFLICT (date) DO UPDATE SET content = $1";
 
-        // TODO: Check for error
         match self.client.execute(QUERY_INSERT, &[&content.to_string()]) {
             Ok(_) => (),
-            Err(err) => return Err(Error::Storing()),
+            Err(err) => return Err(Error::Storing("could not store content into database")),
         }
 
         info!("stored user input");

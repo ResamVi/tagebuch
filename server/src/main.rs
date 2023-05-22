@@ -9,6 +9,7 @@ use tungstenite::{accept, WebSocket, Message};
 
 use crate::stores::Store;
 use crate::stores::db::Database;
+use crate::stores::file::Filesystem;
 use crate::error::Error;
 
 mod error;
@@ -25,15 +26,14 @@ fn main() -> Result<(), Error> {
 
     // Load configurations from environment variables.
     let config = config::Config::from_env();
-    info!("configs loaded: {}", config.connection_string());
+    info!("configs loaded: {}", config.file_path());
 
     // Initialize sink where diary entries are stored.
-    let mut storage = match Database::new(&config) {
+    let mut storage = match Filesystem::new(&config) {
         Ok(store) => store,
         Err(err) => return Err(err),
     };
-    info!("database connection established");
-
+    info!("diary storage initialized");
 
     // Listen for websocket connections.
     let server = match TcpListener::bind(config.bind_address()) {
@@ -73,12 +73,14 @@ fn main() -> Result<(), Error> {
 
             info!("access denied with secret: '{}' wanted: '{}'", secret, config.secret);
         }
+        info!("secret phase correct and authentication succesful");
 
         // Send client what has been written for this day.
         let content = storage.retrieve_latest();
         websocket_conn.write_message(Message::Text(content));
 
         // Listen to what client has to write and store it.
+        // TODO: Can use loop results to simplify Err(err) => { ... }.
         loop {
             // Read message (but check if connection closed).
             let content = match websocket_conn.read_message() {

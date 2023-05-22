@@ -1,4 +1,5 @@
 pub mod db;
+pub mod file;
 
 use crate::error::Error;
 

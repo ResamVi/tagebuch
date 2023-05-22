@@ -18,19 +18,6 @@ services:
       HOST: ${BUCH_HOST:-0.0.0.0}
       PORT: ${BUCH_PORT:-4123}
       SECRET: ${BUCH_SECRET:-sesam öffne dich}
-      DB_HOST: ${BUCH_DB_HOST:-database}
-      DB_USER: ${BUCH_DB_USER:-postgres}
-      DB_PASS: ${BUCH_DB_PASS:-example}
-      DB_PORT: ${BUCH_DB_PORT:-5432}
-  database:
-    image: postgres
-    restart: always
-    ports:
-      - "127.0.0.1:5433:5432"
-    environment:
-      POSTGRES_PASSWORD: ${BUCH_DB_PASS:-example}
+      DIARY_PATH: ${DIARY_PATH:-/app/diary}
     volumes:
-      - tagebuch_data:/var/lib/postgresql/data
-
-volumes:
-  tagebuch_data:
+      - /home/julien/diary:/app/diary

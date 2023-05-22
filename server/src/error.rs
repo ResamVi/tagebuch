@@ -9,7 +9,7 @@ pub enum Error {
     LoggerInit(SetLoggerError),
 
     /// An error when setting up the storage (e.g. SQL statement that sets up the schema failed).
-    Init(),
+    Init(&'static str),
 
     /// An error while accepting the TCP connection.
     TcpConnection(std::io::Error),
@@ -17,8 +17,8 @@ pub enum Error {
     /// An error ...
     ReadMessage(tungstenite::error::Error),
 
-    /// An error ...
-    Storing(),
+    /// An error occured while trying to store the contents into the diary sink.
+    Storing(&'static str),
 }
 
 
@@ -28,8 +28,8 @@ impl Display for Error {
             Error::LoggerInit(err) => {
                 write!(f, "could not initialize logger: {err}")
             },
-            Error::Init() => {
-                write!(f, "could not initialize storage")
+            Error::Init(msg) => {
+                write!(f, "could not initialize storage: {msg}")
             },
             Error::TcpConnection(err) => {
                 write!(f, "could not accept TCP connection: {err}")
@@ -37,8 +37,8 @@ impl Display for Error {
             Error::ReadMessage(err) => {
                 write!(f, "could not accept TCP connection: {err}")
             },
-            Error::Storing() => {
-                write!(f, "could not store content")
+            Error::Storing(err) => {
+                write!(f, "could not store content: {err}")
             },
         }
     }
