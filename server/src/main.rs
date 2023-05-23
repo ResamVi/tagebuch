@@ -91,8 +91,6 @@ fn main() -> Result<(), Error> {
                 }
             };
 
-            info!("content: {content}");
-
             // BUG: Avoid deleting everything that was written when 
             // CTRL+<key> was pressed in the client. IDK
             if content.is_empty() {
