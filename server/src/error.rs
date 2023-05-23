@@ -14,6 +14,9 @@ pub enum Error {
     /// An error while accepting the TCP connection.
     TcpConnection(std::io::Error),
 
+    /// ...
+    Upgrade(),
+
     /// An error ...
     ReadMessage(tungstenite::error::Error),
 
@@ -33,6 +36,9 @@ impl Display for Error {
             },
             Error::TcpConnection(err) => {
                 write!(f, "could not accept TCP connection: {err}")
+            },
+            Error::Upgrade() => {
+                write!(f, "could not upgrade TCP connection to websocket")
             },
             Error::ReadMessage(err) => {
                 write!(f, "could not accept TCP connection: {err}")
