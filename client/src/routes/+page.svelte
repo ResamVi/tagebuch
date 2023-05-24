@@ -102,8 +102,6 @@ function keydown(e: KeyboardEvent) {
 
 .text {
     width: 100%;
-    height: 59px;
-
     font-size: 32px;
     font-family: 'Alegreya';
 }
